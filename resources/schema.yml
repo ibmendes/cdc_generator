@@ -1,0 +1,20 @@
+# ---------------------------------------------------------------------------
+# Unity Catalog objects managed as bundle resources.
+# The catalog itself is NOT created here (catalog creation isn't a bundle
+# resource type) — it must already exist. Schema and Volume are created and
+# torn down together with the rest of the bundle.
+# ---------------------------------------------------------------------------
+resources:
+  schemas:
+    cdc_lab_schema:
+      name: ${var.schema}
+      catalog_name: ${var.catalog}
+      comment: Schema for the CDC / Lakeflow certification lab project (generator, pipeline tables, quality reports)
+
+  volumes:
+    cdc_landing_volume:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.cdc_lab_schema.name}
+      name: ${var.volume_name}
+      volume_type: MANAGED
+      comment: Landing zone where the fake CDC event generator writes batches, read by Auto Loader in the bronze layer

@@ -1,0 +1,16 @@
+[project]
+name = "cdc-lakeflow-cert-lab"
+version = "0.1.0"
+description = "Databricks Data Engineer Professional lab: CDC + Lakeflow Declarative Pipelines + Lakeflow Jobs + DABs"
+requires-python = ">=3.10"
+dependencies = [
+    "faker>=30,<31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

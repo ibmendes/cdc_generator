@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/cdc_lakeflow_cert_lab.egg-info/PKG-INFO
+src/cdc_lakeflow_cert_lab.egg-info/SOURCES.txt
+src/cdc_lakeflow_cert_lab.egg-info/dependency_links.txt
+src/cdc_lakeflow_cert_lab.egg-info/requires.txt
+src/cdc_lakeflow_cert_lab.egg-info/top_level.txt
+src/generator/generate_cdc_batch.py
+src/pipelines/01_bronze_raw_events.py
+src/pipelines/02_silver_customers.py
+src/pipelines/03_gold_customer_metrics.py
+src/quality/check_expectations_log.py
+src/quality/optimize_gold_table.py
+tests/test_generate_cdc_batch.py

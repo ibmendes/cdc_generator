@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: cdc-lakeflow-cert-lab
+Version: 0.1.0
+Summary: Databricks Data Engineer Professional lab: CDC + Lakeflow Declarative Pipelines + Lakeflow Jobs + DABs
+Requires-Python: ==3.12.*
+Requires-Dist: faker<31,>=30
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"

@@ -1,0 +1,28 @@
+resources:
+  pipelines:
+    cdc_lakeflow_pipeline:
+      name: cdc-lakeflow-cert-lab-${bundle.target}
+      catalog: ${var.catalog}
+      schema: ${resources.schemas.cdc_lab_schema.name}
+      serverless: true
+      photon: true
+      channel: CURRENT
+      # `development` is overridden per-target in databricks.yml
+      # (true in dev -> fail fast; false in staging/prod -> auto-retry).
+      development: true
+      libraries:
+        - file:
+            path: ../src/pipelines/01_bronze_raw_events.py
+        - file:
+            path: ../src/pipelines/02_silver_customers.py
+        - file:
+            path: ../src/pipelines/03_gold_customer_metrics.py
+      configuration:
+        landing_volume_path: /Volumes/${var.catalog}/${resources.schemas.cdc_lab_schema.name}/${var.volume_name}/landing
+      # Publishes the pipeline event log as a queryable UC table, so the
+      # check_data_quality job task can read expectation metrics with plain SQL
+      # instead of calling the REST API.
+      event_log:
+        catalog: ${var.catalog}
+        schema: ${resources.schemas.cdc_lab_schema.name}
+        name: pipeline_event_log

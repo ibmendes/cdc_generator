@@ -1,0 +1,77 @@
+resources:
+  jobs:
+    cdc_orchestration_job:
+      name: cdc-orchestration-job-${bundle.target}
+
+      parameters:
+        - name: batch_size
+          default: ${var.batch_size}
+
+      schedule:
+        quartz_cron_expression: "0 0 * * * ?" # every hour, on the hour
+        timezone_id: UTC
+        pause_status: PAUSED # overridden per-target in databricks.yml
+
+      # email_notifications:
+      #   on_failure:
+      #     - ${var.notification_email}
+
+      # Serverless environment shared by every Python task in this job.
+      environments:
+        - environment_key: serverless_env
+          spec:
+            environment_version: "3"
+            dependencies:
+              - faker>=30,<31
+
+      tasks:
+        # 1) Simulate a new batch of CDC events arriving from a source system
+        - task_key: generate_cdc_batch
+          environment_key: serverless_env
+          spark_python_task:
+            python_file: ../src/generator/generate_cdc_batch.py
+            parameters:
+              - "--catalog"
+              - ${var.catalog}
+              - "--schema"
+              - ${resources.schemas.cdc_lab_schema.name}
+              - "--volume"
+              - ${var.volume_name}
+              - "--batch-size"
+              - "{{job.parameters.batch_size}}"
+
+        # 2) Trigger the Lakeflow Declarative Pipeline (bronze -> silver CDC -> gold)
+        - task_key: run_cdc_pipeline
+          depends_on:
+            - task_key: generate_cdc_batch
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.cdc_lakeflow_pipeline.id}
+            full_refresh: false
+
+        # 3) Read the pipeline event log and report on dropped/failed expectations
+        - task_key: check_data_quality
+          depends_on:
+            - task_key: run_cdc_pipeline
+          environment_key: serverless_env
+          spark_python_task:
+            python_file: ../src/quality/check_expectations_log.py
+            parameters:
+              - "--pipeline-id"
+              - ${resources.pipelines.cdc_lakeflow_pipeline.id}
+              - "--catalog"
+              - ${var.catalog}
+              - "--schema"
+              - ${resources.schemas.cdc_lab_schema.name}
+
+        # 4) Housekeeping on the gold table ("other things" the job should do)
+        - task_key: optimize_gold_table
+          depends_on:
+            - task_key: check_data_quality
+          environment_key: serverless_env
+          spark_python_task:
+            python_file: ../src/quality/optimize_gold_table.py
+            parameters:
+              - "--catalog"
+              - ${var.catalog}
+              - "--schema"
+              - ${resources.schemas.cdc_lab_schema.name}

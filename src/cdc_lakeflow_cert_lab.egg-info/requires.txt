@@ -1,0 +1,4 @@
+faker<31,>=30
+
+[dev]
+pytest>=8.0
